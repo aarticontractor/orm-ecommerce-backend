@@ -12,4 +12,5 @@ const sequelize = process.env.JAWSDB_URL
       },
     });
 
+console.log("Successful DB connection");
 module.exports = sequelize;
