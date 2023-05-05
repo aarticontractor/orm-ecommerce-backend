@@ -7,12 +7,57 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 router.get('/', (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
+  Product.findAll({
+    include: [
+      {
+        model: Category
+      },
+      {
+        model: Tag,
+        through: ProductTag,
+      },
+    ],
+  })
+    .then(products => {
+      console.log(products);
+      res.send(products);
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).send('Error fetching products');
+    });
 });
 
 // get one product
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  Product.findOne({
+    where: {
+      id: req.params.id,
+    },
+    include: [
+      {
+        model: Category,
+      },
+      {
+        model: Tag,
+        through: ProductTag,
+      },
+    ],
+  })
+    .then(product => {
+      if (!product) {
+        res.status(404).send(`No product found with id ${req.params.id}`);
+      } else {
+        console.log(product);
+        res.send(product);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).send(`Error fetching product with id ${req.params.id}`);
+    });
 });
 
 // create new product
@@ -91,6 +136,24 @@ router.put('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   // delete one product by its `id` value
+  Product.destroy({
+    where: {
+      id: req.params.id
+    }
+  })
+    .then(numRowsDeleted => {
+      if (numRowsDeleted === 1) {
+        // Return a success message if the product was deleted
+        res.json({ message: 'Product deleted successfully' });
+      } else {
+        // Return a not found error if the product with the given ID was not found
+        res.status(404).json({ message: 'Product not found' });
+      }
+    })
+    .catch(err => {
+      // Return a 500 error if there was a server-side error
+      res.status(500).json({ error: err.message });
+    });
 });
 
 module.exports = router;
