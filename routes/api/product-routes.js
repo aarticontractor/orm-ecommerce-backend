@@ -1,5 +1,10 @@
 const router = require('express').Router();
-const { Product, Category, Tag, ProductTag } = require('../../models');
+const {
+  Product,
+  Category,
+  Tag,
+  ProductTag
+} = require('../../models');
 
 // The `/api/products` endpoint
 
@@ -8,16 +13,15 @@ router.get('/', (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
   Product.findAll({
-    include: [
-      {
-        model: Category
-      },
-      {
-        model: Tag,
-        through: ProductTag,
-      },
-    ],
-  })
+      include: [{
+          model: Category
+        },
+        {
+          model: Tag,
+          through: ProductTag,
+        },
+      ],
+    })
     .then(products => {
       console.log(products);
       res.send(products);
@@ -33,19 +37,18 @@ router.get('/:id', (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
   Product.findOne({
-    where: {
-      id: req.params.id,
-    },
-    include: [
-      {
-        model: Category,
+      where: {
+        id: req.params.id,
       },
-      {
-        model: Tag,
-        through: ProductTag,
-      },
-    ],
-  })
+      include: [{
+          model: Category,
+        },
+        {
+          model: Tag,
+          through: ProductTag,
+        },
+      ],
+    })
     .then(product => {
       if (!product) {
         res.status(404).send(`No product found with id ${req.params.id}`);
@@ -96,17 +99,23 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
   // update product data
   Product.update(req.body, {
-    where: {
-      id: req.params.id,
-    },
-  })
+      where: {
+        id: req.params.id,
+      },
+    })
     .then((product) => {
       // find all associated tags from ProductTag
-      return ProductTag.findAll({ where: { product_id: req.params.id } });
+      return ProductTag.findAll({
+        where: {
+          product_id: req.params.id
+        }
+      });
     })
     .then((productTags) => {
       // get list of current tag_ids
-      const productTagIds = productTags.map(({ tag_id }) => tag_id);
+      const productTagIds = productTags.map(({
+        tag_id
+      }) => tag_id);
       // create filtered list of new tag_ids
       const newProductTags = req.body.tagIds
         .filter((tag_id) => !productTagIds.includes(tag_id))
@@ -118,12 +127,20 @@ router.put('/:id', (req, res) => {
         });
       // figure out which ones to remove
       const productTagsToRemove = productTags
-        .filter(({ tag_id }) => !req.body.tagIds.includes(tag_id))
-        .map(({ id }) => id);
+        .filter(({
+          tag_id
+        }) => !req.body.tagIds.includes(tag_id))
+        .map(({
+          id
+        }) => id);
 
       // run both actions
       return Promise.all([
-        ProductTag.destroy({ where: { id: productTagsToRemove } }),
+        ProductTag.destroy({
+          where: {
+            id: productTagsToRemove
+          }
+        }),
         ProductTag.bulkCreate(newProductTags),
       ]);
     })
@@ -137,22 +154,28 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
   // delete one product by its `id` value
   Product.destroy({
-    where: {
-      id: req.params.id
-    }
-  })
+      where: {
+        id: req.params.id
+      }
+    })
     .then(numRowsDeleted => {
       if (numRowsDeleted === 1) {
         // Return a success message if the product was deleted
-        res.json({ message: 'Product deleted successfully' });
+        res.json({
+          message: 'Product deleted successfully'
+        });
       } else {
         // Return a not found error if the product with the given ID was not found
-        res.status(404).json({ message: 'Product not found' });
+        res.status(404).json({
+          message: 'Product not found'
+        });
       }
     })
     .catch(err => {
       // Return a 500 error if there was a server-side error
-      res.status(500).json({ error: err.message });
+      res.status(500).json({
+        error: err.message
+      });
     });
 });
 
